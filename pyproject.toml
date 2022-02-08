@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "monefy-parser"
+version = "0.1.0"
+description = ""
+authors = ["Bohdan Solianyk <bohdan_solianyk@epam.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+click = "^8.0.3"
+sanic = "^21.12.1"
+dropbox = "^11.27.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.0.1"
+sanic-testing = "^0.8.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
