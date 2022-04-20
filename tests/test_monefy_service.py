@@ -1,8 +1,10 @@
+"""Monefy Application unittests for Monefy Service resources"""
 from src.resources import monefy_service
 from tests.conftest import MockDropboxClient, MockDropbox404Error
 
 
 def test_healthcheck(monefy_app):
+    """Smoke test by healthcheck endpoint"""
     request, response = monefy_app.test_client.get("/healthcheck")
 
     assert request.method == "GET"
@@ -11,6 +13,8 @@ def test_healthcheck(monefy_app):
 
 
 def test_get_monefy_info(monefy_app, monkeypatch):
+    """Unittests GET monefy information method, body, status"""
+
     def mock_dropbox():
         return MockDropboxClient()
 
@@ -23,6 +27,8 @@ def test_get_monefy_info(monefy_app, monkeypatch):
 
 
 def test_get_monefy_info_not_found(monefy_app, monkeypatch):
+    """Unittests GET method for monefy information method and 404 status"""
+
     def mock_dropbox():
 
         return MockDropbox404Error()
@@ -35,6 +41,8 @@ def test_get_monefy_info_not_found(monefy_app, monkeypatch):
 
 
 def test_post_monefy_info(monefy_app, monkeypatch):
+    """Unittests that verify POST monefy information method, body and status"""
+
     def mock_dropbox():
         return MockDropboxClient()
 
