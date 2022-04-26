@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: AWS Monefy Web App EC2 instance template
+
+Parameters:
+  EC2InstanceName:
+    Type: String
+    Default: Monefy-Sanic-Web-App
+  AppEC2InstanceType:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - m1.small
+      - m1.large
+    Description: Enter t2.micro, m1.small, or m1.large. Default is t2.micro.
+  AppImageId:
+    Type: String
+    Default: ami-0006ba1ba3732dd33
+  AppKeyName:
+    Type: String
+    Default: my-aws-key
+  GitRepository:
+    Type: String
+    Default: https://github.com/parseltonguedev/monefy-web-app.git
+  DropboxToken:
+    Type: String
+    Default: token
+    Description: Provide Dropbox Token
+  DropboxPath:
+    Type: String
+    Default: /Apps/monefy/database/
+  DropboxAppSecret:
+    Type: String
+    Default: secret
+    Description: Provide Dropbox App Secret
+  AppPort:
+    Type: String
+    Default: 8888
+    Description: Port that will be used for Monefy Web App
+  AppAutoReload:
+    Type: String
+    Default: False
+    AllowedValues:
+      - False
+      - True
+    Description: Autoreload Sanic App after update
+  AppDebug:
+    Type: String
+    Default: False
+    AllowedValues:
+      - False
+      - True
+    Description: Debug mode for Sanic App
+  AppAccessLog:
+    Type: String
+    Default: False
+    AllowedValues:
+      - False
+      - True
+    Description: Logs access for Sanic App
+  AppVpcId:
+    Type: String
+    Default: vpc-0118939e6a04e2843
+
+Resources:
+  MonefyWebAppInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AppImageId
+      InstanceType: !Ref AppEC2InstanceType
+      KeyName: !Ref AppKeyName
+      SecurityGroupIds:
+        - Ref: AppSecurityGroup
+      Tags:
+        -
+          Key: Name
+          Value: !Ref EC2InstanceName
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash
+            su - ec2-user
+            cd /home/ec2-user
+            sudo yum update -y
+            sudo yum install git -y
+            git clone ${GitRepository}
+            cd monefy-web-app/
+            python3 -m venv env
+            source env/bin/activate
+            pip install -r requirements.txt
+            export DROPBOX_TOKEN=${DropboxToken}
+            export DROPBOX_PATH=${DropboxPath}
+            export DROPBOX_APP_SECRET=${DropboxAppSecret}
+            python run.py --port=${AppPort} --auto-reload=${AppAutoReload} --debug=${AppDebug} --access_log=${AppAccessLog}
+
+  AppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group for Monefy Web App instance
+      VpcId: !Ref AppVpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8888
+          ToPort: 8888
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
