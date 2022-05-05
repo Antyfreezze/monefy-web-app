@@ -1,10 +1,12 @@
 """Dropbox utils module for Monefy Web application"""
-import os
 import csv
+import os
 from io import StringIO
 
 from dropbox import Dropbox
 from sanic.log import logger
+
+from src.domain.data_aggregator import MonefyDataAggregator
 
 
 class DropboxClient:
@@ -28,11 +30,9 @@ class DropboxClient:
             csv_data = csv.DictReader(
                 StringIO(response.content.decode(encoding="utf-8-sig"))
             )
-            monefy_file = []
-            for transaction in csv_data:
-                monefy_file.append(transaction)
-
-            monefy_csv_backup_file[file_name] = monefy_file
+            MonefyDataAggregator.monefy_csv_file_to_json_object(
+                file_name, csv_data, monefy_csv_backup_file
+            )
 
         return monefy_csv_backup_file
 

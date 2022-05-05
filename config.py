@@ -1,6 +1,7 @@
 """Configuration for Sanic Application"""
 import os
 
+from sanic.exceptions import SanicException
 from sanic.log import LOGGING_CONFIG_DEFAULTS
 
 os.makedirs(name="logs", exist_ok=True)
@@ -25,3 +26,12 @@ LOGGING_CONFIG_CUSTOM["handlers"]["errorFile"] = {
 LOGGING_CONFIG_CUSTOM["loggers"]["sanic.root"]["handlers"].append("internalFile")
 LOGGING_CONFIG_CUSTOM["loggers"]["sanic.error"]["handlers"].append("errorFile")
 LOGGING_CONFIG_CUSTOM["loggers"]["sanic.access"]["handlers"].append("accessFile")
+
+
+class NotAcceptable(SanicException):
+    """
+    **Status**: 406 Forbidden
+    """
+
+    status_code = 406
+    quiet = True
