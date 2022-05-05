@@ -1,24 +1,32 @@
 """Monefy-web-app - analyze and visualize data from Monefy App
  that will be parsed from csv formatted backup created in Monefy mobile application"""
 import click
-from sanic import Sanic, Blueprint
+from sanic import Blueprint, Sanic
 
 from config import LOGGING_CONFIG_CUSTOM
-from src.resources.monefy_service import MonefyInfo, DropboxWebhook, HealthCheck
+from src.resources.monefy_service import (
+    DropboxWebhook,
+    HealthCheck,
+    MonefyDataAggregatorView,
+    MonefyInfo,
+)
 
 app = Sanic("Monefy-parser", log_config=LOGGING_CONFIG_CUSTOM)
 
 monefy_bp = Blueprint("monefy_bp")
 dropbox_bp = Blueprint("dropbox_bp")
 healthcheck_bp = Blueprint("healthcheck_bp")
+data_aggregation_bp = Blueprint("data_aggregation_bp")
 
 healthcheck_bp.add_route(HealthCheck.as_view(), "/healthcheck")
 monefy_bp.add_route(MonefyInfo.as_view(), "/monefy_info")
 dropbox_bp.add_route(DropboxWebhook.as_view(), "/dropbox_webhook")
+data_aggregation_bp.add_route(MonefyDataAggregatorView.as_view(), "/monefy_aggregation")
 
 app.blueprint(monefy_bp, url_prefix="/monefy")
 app.blueprint(dropbox_bp, url_prefix="/dropbox")
 app.blueprint(healthcheck_bp)
+app.blueprint(data_aggregation_bp)
 
 
 @click.command()

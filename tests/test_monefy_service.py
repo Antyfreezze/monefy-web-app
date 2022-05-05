@@ -1,6 +1,6 @@
 """Monefy Application unittests for Monefy Service resources"""
 from src.resources import monefy_service
-from tests.conftest import MockDropboxClient, MockDropbox404Error
+from tests.conftest import MockDropbox404Error, MockDropboxClient
 
 
 def test_healthcheck(monefy_app):
@@ -22,7 +22,7 @@ def test_get_monefy_info(monefy_app, monkeypatch):
     request, response = monefy_app.test_client.get("/monefy/monefy_info")
 
     assert request.method == "GET"
-    assert response.body == b'{"monefy.csv":"test"}'
+    assert response.body == b'{"monefy-2022-01-01_01-01-01.csv":"test"}'
     assert response.status == 200
 
 
@@ -49,5 +49,69 @@ def test_post_monefy_info(monefy_app, monkeypatch):
     monkeypatch.setattr(monefy_service, "DropboxClient", mock_dropbox)
     request, response = monefy_app.test_client.post("/monefy/monefy_info")
     assert request.method == "POST"
-    assert response.body == b'{"message":["monefy.csv"]}'
+    assert response.body == b'{"message":["monefy-2022-01-01_01-01-01.csv"]}'
     assert response.status == 200
+
+
+def test_get_data_aggregation(monefy_app, monkeypatch):
+    """Unittest that verify GET monefy data aggregation method with all available valid arguments"""
+
+    def mock_dropbox():
+        return MockDropboxClient()
+
+    monkeypatch.setattr(monefy_service, "DropboxClient", mock_dropbox)
+    monefy_app.test_client.post("/monefy/monefy_info")
+    request, response = monefy_app.test_client.get(
+        "/monefy_aggregation", params={"format": "json"}
+    )
+    assert request.method == "GET"
+    assert response.status == 200
+
+    request, response = monefy_app.test_client.get(
+        "/monefy_aggregation", params={"format": "csv"}
+    )
+    assert request.method == "GET"
+    assert response.status == 200
+
+    request, response = monefy_app.test_client.get(
+        "/monefy_aggregation", params={"format": "json", "summarized": "true"}
+    )
+    assert request.method == "GET"
+    assert response.status == 200
+
+    request, response = monefy_app.test_client.get(
+        "/monefy_aggregation", params={"format": "csv", "summarized": "true"}
+    )
+    assert request.method == "GET"
+    assert response.status == 200
+
+
+def test_get_data_aggregation_not_acceptable(monefy_app, monkeypatch):
+    """Unittest that verify GET monefy data aggregation
+    method error response for invalid arguments"""
+
+    def mock_dropbox():
+        return MockDropboxClient()
+
+    monkeypatch.setattr(monefy_service, "DropboxClient", mock_dropbox)
+    monefy_app.test_client.post("/monefy/monefy_info")
+
+    request, response = monefy_app.test_client.get(
+        "/monefy_aggregation", params={"format": "xml"}
+    )
+    assert request.method == "GET"
+    assert (
+        response.body
+        == b'{"message":"Provided format (xml) not supported for data aggregation.'
+        b" Acceptable arguments - 'format - csv or json' and 'summarized (optional)' \"}"
+    )
+    assert response.status == 406
+
+    request, response = monefy_app.test_client.get("/monefy_aggregation")
+    assert request.method == "GET"
+    assert (
+        response.body
+        == b'{"message":"Provided format (None) not supported for data aggregation.'
+        b" Acceptable arguments - 'format - csv or json' and 'summarized (optional)' \"}"
+    )
+    assert response.status == 406

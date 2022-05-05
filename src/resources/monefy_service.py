@@ -1,14 +1,16 @@
 """Services for Monefy Web Application"""
-import os
 import hmac
+import os
 from hashlib import sha256
 from http import HTTPStatus
 
-from sanic.log import logger
-from sanic.views import HTTPMethodView
-from sanic.response import json, text, HTTPResponse
 from sanic.exceptions import Forbidden, NotFound
+from sanic.log import logger
+from sanic.response import HTTPResponse, file, json, text
+from sanic.views import HTTPMethodView
 
+from config import NotAcceptable
+from src.domain.data_aggregator import MonefyDataAggregator
 from src.domain.dropbox_utils import DropboxClient
 
 
@@ -24,7 +26,8 @@ class ViewWithDropboxClient(HTTPMethodView):
 class HealthCheck(HTTPMethodView):
     """View for Smoke test"""
 
-    async def get(self, request) -> HTTPResponse:
+    @staticmethod
+    async def get(request) -> HTTPResponse:
         """Function for smoke test"""
         return json({"message": "Hello world!"})
 
@@ -48,7 +51,8 @@ class MonefyInfo(ViewWithDropboxClient):
 class DropboxWebhook(ViewWithDropboxClient):
     """View for Dropbox Webhook"""
 
-    async def get(self, request) -> HTTPResponse:
+    @staticmethod
+    async def get(request) -> HTTPResponse:
         """Respond to the webhook verification (GET request)
         by echoing back the challenge parameter"""
         logger.info("verify dropbox webhook")
@@ -71,3 +75,37 @@ class DropboxWebhook(ViewWithDropboxClient):
             raise Forbidden("Request forbidden", status_code=HTTPStatus.FORBIDDEN)
         result = self.dropbox_client.write_monefy_info()
         return json({"message": result}, status=HTTPStatus.OK)
+
+
+class MonefyDataAggregatorView(ViewWithDropboxClient):
+    """View for Monefy Data Aggregation"""
+
+    @staticmethod
+    async def get(request) -> HTTPResponse:
+        """Return Monefy file with spending's in json/csv format"""
+        logger.info(
+            "request data aggregation in %s format, summarized - %s",
+            request.args.get("format"),
+            request.args.get("summarized"),
+        )
+        data_aggregator = MonefyDataAggregator(
+            request.args.get("format"), request.args.get("summarized")
+        )
+        try:
+            result_file = data_aggregator.get_result_file()
+            return await file(
+                result_file, headers={"Content-Disposition": "attachment"}
+            )
+        except NotAcceptable:
+            logger.error(
+                "%s format doesn't supported for data aggregation",
+                request.args.get("format"),
+            )
+            return json(
+                {
+                    "message": f"Provided format ({request.args.get('format')}) "
+                    f"not supported for data aggregation."
+                    f" Acceptable arguments - 'format - csv or json' and 'summarized (optional)' "
+                },
+                status=HTTPStatus.NOT_ACCEPTABLE,
+            )
