@@ -1,3 +1,4 @@
+"""Services for Monefy Web Application"""
 import os
 import hmac
 from hashlib import sha256
@@ -12,6 +13,7 @@ from src.domain.dropbox_utils import DropboxClient
 
 
 class ViewWithDropboxClient(HTTPMethodView):
+    """Sanic View for Dropbox Client"""
 
     def __init__(self):
         super().__init__()
@@ -20,6 +22,7 @@ class ViewWithDropboxClient(HTTPMethodView):
 
 
 class HealthCheck(HTTPMethodView):
+    """View for Smoke test"""
 
     async def get(self, request) -> HTTPResponse:
         """Function for smoke test"""
@@ -27,6 +30,7 @@ class HealthCheck(HTTPMethodView):
 
 
 class MonefyInfo(ViewWithDropboxClient):
+    """View for Monefy Web Application"""
 
     async def get(self, request) -> HTTPResponse:
         """Returns JSON formatted monefy transactions from csv files"""
@@ -42,24 +46,28 @@ class MonefyInfo(ViewWithDropboxClient):
 
 
 class DropboxWebhook(ViewWithDropboxClient):
+    """View for Dropbox Webhook"""
 
     async def get(self, request) -> HTTPResponse:
-        """Respond to the webhook verification (GET request) by echoing back the challenge parameter"""
+        """Respond to the webhook verification (GET request)
+        by echoing back the challenge parameter"""
         logger.info("verify dropbox webhook")
         resp = request.args.get("challenge")
         return text(
             resp,
             headers={"Content-Type": "text/plain", "X-Content-Type-Options": "nosniff"},
-            status=HTTPStatus.OK
+            status=HTTPStatus.OK,
         )
 
     async def post(self, request) -> HTTPResponse:
         """Write csv files stored in Dropbox storage to instance"""
-        logger.info(f"write files by dropbox webhook {request.body}")
+        logger.info("write files by dropbox webhook %s", request.body)
         # Make sure this is a valid request from Dropbox
         signature = request.headers.get("X-Dropbox-Signature", "InvalidSignature")
-        if not hmac.compare_digest(signature, hmac.new(self.secret.encode(), request.body, sha256).hexdigest()):
-            logger.error(f"Dropbox webhook validation check failed: Request forbidden")
+        if not hmac.compare_digest(
+            signature, hmac.new(self.secret.encode(), request.body, sha256).hexdigest()
+        ):
+            logger.error("Dropbox webhook validation check failed: Request forbidden")
             raise Forbidden("Request forbidden", status_code=HTTPStatus.FORBIDDEN)
         result = self.dropbox_client.write_monefy_info()
         return json({"message": result}, status=HTTPStatus.OK)

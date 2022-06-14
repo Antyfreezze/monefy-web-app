@@ -1,9 +1,12 @@
+"""Monefy-web-app - analyze and visualize data from Monefy App
+ that will be parsed from csv formatted backup created in Monefy mobile application"""
 import click
 from sanic import Sanic, Blueprint
 
+from config import LOGGING_CONFIG_CUSTOM
 from src.resources.monefy_service import MonefyInfo, DropboxWebhook, HealthCheck
 
-app = Sanic("Monefy-parser")
+app = Sanic("Monefy-parser", log_config=LOGGING_CONFIG_CUSTOM)
 
 monefy_bp = Blueprint("monefy_bp")
 dropbox_bp = Blueprint("dropbox_bp")
@@ -24,14 +27,16 @@ app.blueprint(healthcheck_bp)
 @click.option("--auto-reload", default=False)
 @click.option("--debug", default=False)
 @click.option("--access_log", default=False)
-def run_server(host, port, auto_reload, debug, access_log):
+def run_server(
+    host="0.0.0.0", port=1337, auto_reload=False, debug=False, access_log=False
+):
     """Run server with provided configuration"""
     app.run(
         host=host,
         port=port,
         auto_reload=auto_reload,
         debug=debug,
-        access_log=access_log
+        access_log=access_log,
     )
 
 

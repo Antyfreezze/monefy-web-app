@@ -13,7 +13,21 @@ dropbox = "^11.27.0"
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.1"
 sanic-testing = "^0.8.2"
+pylint = "^2.13.7"
+black = "^22.3.0"
+coverage = "^6.3.2"
+pytest-asyncio = "^0.18.3"
+pytest-cov = "^3.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pylint.master]
+output-format = "colorized"
+
+[tool.pylint.messages_control]
+disable = ["unused-argument", "no-self-use"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"

@@ -1,5 +1,7 @@
 # monefy-web-app
 
+![example workflow](https://github.com/parseltonguedev/monefy-web-app/actions/workflows/monefy-app-build.yml/badge.svg)
+
 ### Purpose of the project
 Monefy-web-app idea - analyze and visualize data from Monefy App
 that will be parsed from csv formatted backup created in Monefy mobile application  
@@ -89,6 +91,7 @@ export DROPBOX_APP_SECRET=yourDropboxAppSecret
 4) [Install dependencies](https://python-poetry.org/docs/basic-usage/#installing-dependencies):
     ```
    poetry install
+   poetry shell
    ```
 5) Provide environment variables from `Critical files step`
 6) Run application. You can provide additional parameters to run Monefy-web-app as:
