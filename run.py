@@ -2,6 +2,7 @@
  that will be parsed from csv formatted backup created in Monefy mobile application"""
 import click
 from sanic import Blueprint, Sanic
+from sanic_openapi import swagger_blueprint
 
 from config import LOGGING_CONFIG_CUSTOM
 from src.resources.monefy_service import (
@@ -27,6 +28,7 @@ app.blueprint(monefy_bp, url_prefix="/monefy")
 app.blueprint(dropbox_bp, url_prefix="/dropbox")
 app.blueprint(healthcheck_bp)
 app.blueprint(data_aggregation_bp)
+app.blueprint(swagger_blueprint)
 
 
 @click.command()
@@ -36,8 +38,12 @@ app.blueprint(data_aggregation_bp)
 @click.option("--debug", default=False)
 @click.option("--access_log", default=False)
 def run_server(
-    host="0.0.0.0", port=1337, auto_reload=False, debug=False, access_log=False
-):
+    host: str = "0.0.0.0",
+    port: int = 1337,
+    auto_reload: bool = False,
+    debug: bool = False,
+    access_log: bool = False,
+) -> None:
     """Run server with provided configuration"""
     app.run(
         host=host,

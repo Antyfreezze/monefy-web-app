@@ -5,95 +5,43 @@ import os
 import re
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any, Iterator
 
 from sanic.log import logger
 
-from config import NotAcceptable
+from utils import NotAcceptable
 
 
 @dataclass
 class MonefyBalance:
     """Dataclass for calculating Monefy balance"""
 
-    income: int
-    expense: int
-    balance: int
-    salary: int
-    savings: int
-    deposits: int
-    bills: int
-    gifts: int
-    house: int
-    food: int
-    eating_out: int
-    communications: int
-    toiletry: int
-    entertainment: int
-    pets: int
-    transport: int
-    health: int
-    sports: int
-    car: int
-    clothes: int
-    taxi: int
+    categories: dict[str, int]
+    income: int = 0
+    expense: int = 0
+    balance: int = 0
 
-    def __init__(self, summarized_monefy_data):
+    def __init__(self, summarized_monefy_data: dict[str, int]):
         logger.info("creating monefy balance instance")
-        self.summarized_monefy_data = summarized_monefy_data
-        self.calculate_monefy_balance()
+        self.categories = summarized_monefy_data
         self.calculate_current_balance()
 
-    def calculate_monefy_balance(self):
-        """Calculate Monefy income and expense categories by provided data"""
-        logger.info("calculate monefy categories")
-        monefy_data = self.summarized_monefy_data
-        self.salary = monefy_data["Salary"]
-        self.savings = monefy_data["Savings"]
-        self.deposits = monefy_data["Deposits"]
-        self.bills = monefy_data["Bills"]
-        self.gifts = monefy_data["Gifts"]
-        self.house = monefy_data["House"]
-        self.food = monefy_data["Food"]
-        self.eating_out = monefy_data["Eating out"]
-        self.communications = monefy_data["Communications"]
-        self.toiletry = monefy_data["Toiletry"]
-        self.entertainment = monefy_data["Entertainment"]
-        self.pets = monefy_data["Pets"]
-        self.transport = monefy_data["Transport"]
-        self.health = monefy_data["Health"]
-        self.sports = monefy_data["Sports"]
-        self.car = monefy_data["Car"]
-        self.clothes = monefy_data["Clothes"]
-        self.taxi = monefy_data["Taxi"]
-
-    def calculate_current_balance(self):
+    def calculate_current_balance(self) -> None:
         """Calculate total income, expenses and
         current balance by provided Monefy data"""
         logger.info("calculate monefy income, expense and balance")
-        self.income = self.salary + self.savings + self.deposits
-        self.expense = (
-            self.bills
-            + self.gifts
-            + self.house
-            + self.food
-            + self.eating_out
-            + self.communications
-            + self.toiletry
-            + self.entertainment
-            + self.pets
-            + self.transport
-            + self.health
-            + self.sports
-            + self.car
-            + self.clothes
-            + self.taxi
-        )
-        self.balance = self.income + self.expense
+        income_fields = ("salary", "savings", "deposits")
+        for monefy_category, category_balance in self.categories.items():
+            if monefy_category.lower() in income_fields:
+                self.income += category_balance
+            elif monefy_category:
+                self.expense += category_balance
+            self.balance = self.income + self.expense
 
 
 class MonefyDataAggregator:
     """Monefy Data aggregation class that responsible for creating summarized
-    or detailed transaction info for provided income and spendings"""
+    or detailed transaction info for provided income and spending's"""
 
     monefy_csv_directory_path = os.path.join(
         os.getcwd(), "monefy_csv_files"
@@ -101,14 +49,14 @@ class MonefyDataAggregator:
     monefy_json_directory_path = os.path.join(os.getcwd(), "monefy_json_files")
     accepted_file_formats = ("json", "csv")
 
-    def __init__(self, result_file_format, summarize_balance):
+    def __init__(self, result_file_format: str, summarize_balance: str):
         self.result_file_format = result_file_format
         self.summarize_balance = summarize_balance
 
-    def convert_csv_to_json(self):
+    def convert_csv_to_json(self) -> dict[str, list[dict[str, str]]]:
         """Method for converting csv Monefy data to json like object"""
         logger.info("converting csv to json")
-        monefy_json = {}
+        monefy_json: dict[str, list[dict[str, str]]] = {}
         monefy_csv_file = self.get_latest_monefy_csv_file()
 
         with open(
@@ -121,7 +69,7 @@ class MonefyDataAggregator:
             )
         return monefy_json
 
-    def write_json_file(self, file_name, json_data):
+    def write_json_file(self, file_name: str, json_data: dict[Any, Any]) -> str:
         """Method for writing json files. Can accept file name and json_data as parameters"""
         logger.info("writing json file")
         os.makedirs(self.monefy_json_directory_path, exist_ok=True)
@@ -132,9 +80,10 @@ class MonefyDataAggregator:
             monefy_json_file_path, mode="w", encoding="utf-8-sig"
         ) as monefy_json_file:
             monefy_json_file.write(json.dumps(json_data, indent=4))
+
         return monefy_json_file_path
 
-    def write_csv_file(self, file_name, json_object):
+    def write_csv_file(self, file_name: str, json_object: dict[str, int]) -> str:
         """Method for writing csv files from json.
         Accept file name and json like object as parameters"""
         logger.info("writing csv file")
@@ -152,8 +101,10 @@ class MonefyDataAggregator:
 
     @staticmethod
     def monefy_csv_file_to_json_object(
-        monefy_csv_file_name, monefy_csv_data, monefy_json_object
-    ):
+        monefy_csv_file_name: str,
+        monefy_csv_data: Iterator[dict[str, str]],
+        monefy_json_object: dict[Any, Any],
+    ) -> None:
         """Method for converting Monefy csv backup file to json like object"""
         logger.info("creating monefy json object from csv file")
         monefy_file = []
@@ -163,7 +114,7 @@ class MonefyDataAggregator:
         monefy_json_object[monefy_csv_file_name] = monefy_file
 
     @staticmethod
-    def unify_csv_header(monefy_csv_file_path):
+    def unify_csv_header(monefy_csv_file_path: str) -> None:
         """Method for unifying csv file header for further use in json like object"""
         logger.info("unifying csv file headers")
         edited_header = (
@@ -180,7 +131,7 @@ class MonefyDataAggregator:
         ) as monefy_edited_csv_file:
             monefy_edited_csv_file.writelines(monefy_edited_csv_data)
 
-    def get_latest_monefy_csv_file(self):
+    def get_latest_monefy_csv_file(self) -> str:
         """Method that returns actual Monefy csv file by date"""
         logger.info("getting latest monefy csv file")
         monefy_csv_files = os.listdir(self.monefy_csv_directory_path)
@@ -199,18 +150,18 @@ class MonefyDataAggregator:
         )
         return monefy_csv_file
 
-    def get_latest_monefy_csv_path(self):
+    def get_latest_monefy_csv_path(self) -> str:
         """Method that returns absolute path to latest Monefy csv file"""
         logger.info("getting latest monefy csv file path")
         return os.path.join(
             self.monefy_csv_directory_path, self.get_latest_monefy_csv_file()
         )
 
-    def get_result_file(self):
+    def get_result_file(self) -> str:
         """Method for returning result file that depends on provided response headers.
         Result file can be summarized or detailed with each Monefy transaction"""
         logger.info("getting result file")
-        result_file = None
+        result_file = ""
         if self.result_file_format in self.accepted_file_formats:
             if self.result_file_format == "csv":
                 if self.summarize_balance:
@@ -235,10 +186,10 @@ class MonefyDataAggregator:
                         csv_file_name, self.convert_csv_to_json()
                     )
             return result_file
-        logger.info("%s format not supported", self.result_file_format)
+        logger.info(f"{self.result_file_format} format not supported")
         raise NotAcceptable(f"{self.result_file_format} not supported")
 
-    def summarize_monefy_data(self):
+    def summarize_monefy_data(self) -> dict[str, int]:
         """Method that summarize detailed income and spending's from provided Monefy data"""
         logger.info("summarizing monefy data")
         monefy_json = self.convert_csv_to_json()
@@ -252,7 +203,7 @@ class MonefyDataAggregator:
             )
         return summarized_monefy_data
 
-    def create_monefy_balance(self):
+    def create_monefy_balance(self) -> MonefyBalance:
         """Method that return dataclass instance of actual Monefy Balance"""
         monefy_balance = MonefyBalance(self.summarize_monefy_data())
         return monefy_balance

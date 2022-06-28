@@ -1,4 +1,7 @@
 """Monefy Application unittests for Monefy Service resources"""
+import hmac
+from hashlib import sha256
+
 from src.resources import monefy_service
 from tests.conftest import MockDropbox404Error, MockDropboxClient
 
@@ -115,3 +118,40 @@ def test_get_data_aggregation_not_acceptable(monefy_app, monkeypatch):
         b" Acceptable arguments - 'format - csv or json' and 'summarized (optional)' \"}"
     )
     assert response.status == 406
+
+
+def test_get_dropbox_webhook(monefy_app):
+    """Unittest for Dropbox signature webhook verification"""
+
+    request, response = monefy_app.test_client.get(
+        "/dropbox/dropbox_webhook", params={"challenge": "test_token"}
+    )
+    assert request.method == "GET"
+    assert response.body == b"test_token"
+    assert response.status == 200
+
+
+def test_post_dropbox_webhook_200(monefy_app, monkeypatch):
+    """Unittest for Dropbox webhook POST method with success status"""
+
+    def mock_dropbox():
+        return MockDropboxClient()
+
+    monkeypatch.setattr(monefy_service, "DropboxClient", mock_dropbox)
+
+    test_signature = hmac.new("TEST".encode(), "".encode(), sha256).hexdigest()
+    request, response = monefy_app.test_client.post(
+        "/dropbox/dropbox_webhook", headers={"X-Dropbox-Signature": test_signature}
+    )
+    assert request.method == "POST"
+    assert response.body == b'{"message":["monefy-2022-01-01_01-01-01.csv"]}'
+    assert response.status == 200
+
+
+def test_post_dropbox_webhook_403(monefy_app):
+    """Unittest for Dropbox webhook POST method with wrong signature comparison"""
+
+    request, response = monefy_app.test_client.post("/dropbox/dropbox_webhook")
+
+    assert request.method == "POST"
+    assert response.status == 403

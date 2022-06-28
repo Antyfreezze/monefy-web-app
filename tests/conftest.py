@@ -2,6 +2,7 @@
 import shutil
 from unittest.mock import MagicMock
 
+import pytest
 import pytest_asyncio
 
 from run import app
@@ -109,3 +110,30 @@ def cleanup_on_teardown():
     shutil.rmtree("logs")
     shutil.rmtree("monefy_csv_files")
     shutil.rmtree("monefy_json_files")
+
+
+@pytest.fixture()
+def monefy_data():
+    """Mock data for MonefyBalance class tests"""
+    monefy_categories = {
+        "Salary": 5451,
+        "House": -476,
+        "Food": -456,
+        "Deposits": 966,
+        "Savings": 987,
+        "Entertainment": -199,
+        "Gifts": -509,
+        "Pets": -154,
+        "Bills": -788,
+        "Toiletry": -297,
+        "Communications": -399,
+        "Eating out": -433,
+        "Car": -46,
+        "Transport": -130,
+        "Health": -97,
+        "Clothes": -33,
+        "Sports": -55,
+        "Taxi": -22,
+        "Donations": -999,
+    }
+    return monefy_categories

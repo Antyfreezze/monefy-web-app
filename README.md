@@ -48,7 +48,7 @@ If run with pip:
 If run with poetry:
 
 * `poetry.lock` - file with dependencies and their versions
-to check dependecies tree run command: `poetry show --tree`
+to check dependencies' tree run command: `poetry show --tree`
 * `poetry.toml` - project description. Using for orchestrate project and its dependencies
 
 Provide sensitive data with these commands for Dropbox client:
