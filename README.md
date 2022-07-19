@@ -1,6 +1,7 @@
 # monefy-web-app
 
 ![example workflow](https://github.com/parseltonguedev/monefy-web-app/actions/workflows/monefy-app-build.yml/badge.svg)
+[![codecov](https://codecov.io/gh/parseltonguedev/monefy-web-app/branch/master/graph/badge.svg?token=IE74W8N4QN)](https://codecov.io/gh/parseltonguedev/monefy-web-app)
 
 ### Purpose of the project
 Monefy-web-app idea - analyze and visualize data from Monefy App
@@ -13,6 +14,11 @@ The project was made for academic purpose to get new knowledge about Python, asy
 ```
 .
 ├── env
+├── aws-ec2-sanic-web-app.yaml
+├── config.py
+├── Dockerfile
+├── poetry.lock
+├── pyproject.toml
 ├── README.md
 ├── requirements.txt
 ├── run.py
@@ -25,7 +31,6 @@ The project was made for academic purpose to get new knowledge about Python, asy
 │   └── schema
 ├── tests
 └── utils.py
-
 ```
 
 ### Where the data comes from
@@ -43,7 +48,7 @@ If run with pip:
 If run with poetry:
 
 * `poetry.lock` - file with dependencies and their versions
-to check dependecies tree run command: `poetry show --tree`
+to check dependencies' tree run command: `poetry show --tree`
 * `poetry.toml` - project description. Using for orchestrate project and its dependencies
 
 Provide sensitive data with these commands for Dropbox client:
@@ -132,13 +137,13 @@ Pytest supports several ways to run and select tests from CLI:
   - `pytest tests/test_%test_name%.py`
 
 - Run tests in a directory:
-  - `pytest tests/`
+  - `pytest`
 
 ### API endpoints
 
-| Resource URL             | Method'(s) | Description                                                                                |
-|--------------------------|------------|--------------------------------------------------------------------------------------------|
-| /healthcheck             | GET        | Endpoint for smoke test                                                                    |
-| /monefy/monefy_info      | GET, POST  | Get current Monefy statistic from Dropbox or add Monefy statistic from Dropbox to instance |
-| /dropbox/dropbox_webhook | GET, POST  | Verify Dropbox webhook or trigger Webhook by actions in Dropbox storage<br/>               |
-|                          |            |                                                                                            |
+| Resource URL             | Method'(s) | Description                                                                                                                                                                                                             |
+|--------------------------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| /healthcheck             | GET        | Endpoint for smoke test                                                                                                                                                                                                 |
+| /monefy/monefy_info      | GET, POST  | Get current Monefy statistic from Dropbox or add Monefy statistic from Dropbox to instance                                                                                                                              |
+| /dropbox/dropbox_webhook | GET, POST  | Verify Dropbox webhook or trigger Webhook by actions in Dropbox storage<br/>                                                                                                                                            |
+| /monefy_aggregation      | GET        | Download file with aggregated or detailed transaction information from latest uploaded Monefy backup file. Parameters - **format** (**required**, valid values - **csv**/**json**), **summarized** (optional parameter) |

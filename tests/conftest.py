@@ -2,15 +2,15 @@
 import shutil
 from unittest.mock import MagicMock
 
+import pytest
 import pytest_asyncio
 
 from run import app
 from src.domain import dropbox_utils
 from src.domain.dropbox_utils import DropboxClient
 
-
 csv_file = MagicMock()
-csv_file.name = "test.csv"
+csv_file.name = "monefy-2022-01-01_01-01-01.csv"
 
 test_file = MagicMock()
 test_file.entries = [csv_file]
@@ -19,7 +19,7 @@ ContentMock = MagicMock
 ContentMock.content = (
     b"\xef\xbb\xbfdate,account,category,amount,"
     b"currency,converted amount,currency,description"
-    b"\r\n12/12/2021,Cash,Salary,1111,USD,1111,USD"
+    b"\r\n12/12/2021,Cash,Salary,1111,USD,1111,USD,"
 )
 
 
@@ -51,12 +51,14 @@ class MockDropboxClient:
     @staticmethod
     def get_monefy_info():
         """Mocked Dropbox client get_monefy_info method for Unittests"""
-        return {"monefy.csv": "test"}
+        return {csv_file.name: "test"}
 
     @staticmethod
     def write_monefy_info():
         """Mocked Dropbox client write_monefy_info method for Unittests"""
-        return ["monefy.csv"]
+        with open(f"monefy_csv_files/{csv_file.name}", "wb") as monefy_file:
+            monefy_file.write(ContentMock.content)
+        return [csv_file.name]
 
 
 class MockDropbox404Error(MockDropboxClient):
@@ -101,8 +103,37 @@ def dropbox_error_client(monkeypatch):
     return mocked_dropbox_client
 
 
-@pytest_asyncio.fixture(autouse=True, scope='session')
+@pytest_asyncio.fixture(autouse=True, scope="session")
 def cleanup_on_teardown():
     """Cleanup logs' directory after tests session"""
     yield
-    shutil.rmtree('logs')
+    shutil.rmtree("logs")
+    shutil.rmtree("monefy_csv_files")
+    shutil.rmtree("monefy_json_files")
+
+
+@pytest.fixture()
+def monefy_data():
+    """Mock data for MonefyBalance class tests"""
+    monefy_categories = {
+        "Salary": 5451,
+        "House": -476,
+        "Food": -456,
+        "Deposits": 966,
+        "Savings": 987,
+        "Entertainment": -199,
+        "Gifts": -509,
+        "Pets": -154,
+        "Bills": -788,
+        "Toiletry": -297,
+        "Communications": -399,
+        "Eating out": -433,
+        "Car": -46,
+        "Transport": -130,
+        "Health": -97,
+        "Clothes": -33,
+        "Sports": -55,
+        "Taxi": -22,
+        "Donations": -999,
+    }
+    return monefy_categories

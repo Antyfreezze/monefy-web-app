@@ -10,17 +10,17 @@ LOGGING_CONFIG_CUSTOM = LOGGING_CONFIG_DEFAULTS
 LOGGING_CONFIG_CUSTOM["handlers"]["internalFile"] = {
     "class": "logging.FileHandler",
     "formatter": "generic",
-    "filename": "logs/sanic_internal.log",
+    "filename": "logs/monefy_app.log",
 }
 LOGGING_CONFIG_CUSTOM["handlers"]["accessFile"] = {
     "class": "logging.FileHandler",
     "formatter": "access",
-    "filename": "logs/sanic_access.log",
+    "filename": "logs/monefy_app.log",
 }
 LOGGING_CONFIG_CUSTOM["handlers"]["errorFile"] = {
     "class": "logging.FileHandler",
     "formatter": "generic",
-    "filename": "logs/sanic_error.log",
+    "filename": "logs/monefy_app.log",
 }
 LOGGING_CONFIG_CUSTOM["loggers"]["sanic.root"]["handlers"].append("internalFile")
 LOGGING_CONFIG_CUSTOM["loggers"]["sanic.error"]["handlers"].append("errorFile")
