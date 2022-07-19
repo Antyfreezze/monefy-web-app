@@ -1,5 +1,9 @@
 .idea/
 
+# App folders
+monefy_csv_files/
+monefy_json_files/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 logs/
