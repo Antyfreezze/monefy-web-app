@@ -21,7 +21,7 @@ class ViewWithDropboxClient(HTTPMethodView):
     def __init__(self) -> None:
         super().__init__()
         self.dropbox_client = DropboxClient()
-        self.secret = os.environ.get("DROPBOX_APP_SECRET", "EMPTY")
+        self._secret = os.environ.get("DROPBOX_APP_SECRET", "EMPTY")
 
 
 class HealthCheck(HTTPMethodView):
@@ -70,7 +70,7 @@ class DropboxWebhook(ViewWithDropboxClient):
         # Make sure this is a valid request from Dropbox
         signature = request.headers.get("X-Dropbox-Signature", "InvalidSignature")
         if not hmac.compare_digest(
-            signature, hmac.new(self.secret.encode(), request.body, sha256).hexdigest()
+            signature, hmac.new(self._secret.encode(), request.body, sha256).hexdigest()
         ):
             logger.error("Dropbox webhook validation check failed: Request forbidden")
             raise Forbidden("Request forbidden", status_code=HTTPStatus.FORBIDDEN)
@@ -99,7 +99,7 @@ class MonefyDataAggregatorView(ViewWithDropboxClient):
             )
         except NotAcceptable:
             logger.error(
-                f"{request.args.get('format')} format doesn't supported for data aggregation"
+                f"{request.args.get('format')} format is not supported for data aggregation"
             )
             return json(
                 {

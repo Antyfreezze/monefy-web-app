@@ -30,7 +30,7 @@ class DropboxClient:
             csv_data = csv.DictReader(
                 StringIO(response.content.decode(encoding="utf-8-sig"))
             )
-            MonefyDataAggregator.monefy_csv_file_to_json_object(
+            MonefyDataAggregator.csv_file_to_json_object(
                 file_name, csv_data, monefy_csv_backup_file
             )
 
