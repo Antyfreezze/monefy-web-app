@@ -12,8 +12,8 @@ from src.domain.data_aggregator import MonefyDataAggregator
 class DropboxClient:
     """Dropbox Client to interact with Monefy backup files in Storage"""
 
-    _token: str = os.environ["DROPBOX_TOKEN"]
-    folder: str = os.environ["DROPBOX_PATH"]
+    _token: str = os.environ.get("DROPBOX_TOKEN")
+    folder: str = os.environ.get("DROPBOX_PATH")
 
     def __init__(self) -> None:
         self.dropbox_client = Dropbox(self._token)
@@ -30,7 +30,7 @@ class DropboxClient:
             csv_data = csv.DictReader(
                 StringIO(response.content.decode(encoding="utf-8-sig"))
             )
-            MonefyDataAggregator.monefy_csv_file_to_json_object(
+            MonefyDataAggregator.csv_file_to_json_object(
                 file_name, csv_data, monefy_csv_backup_file
             )
 
