@@ -1,4 +1,7 @@
 .idea/
+monefied.service
+monefy.db
+nginx.conf
 
 # App folders
 monefy_csv_files/

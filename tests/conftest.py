@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 import pytest_asyncio
 
-from run import app
+from run import monefy_web_app
 from src.domain import dropbox_utils
 from src.domain.dropbox_utils import DropboxClient
 
@@ -73,7 +73,7 @@ class MockDropbox404Error(MockDropboxClient):
 @pytest_asyncio.fixture()
 def monefy_app():
     """Mocked monefy app for Unittests"""
-    monefy_test_app = app
+    monefy_test_app = monefy_web_app
     return monefy_test_app
 
 
@@ -86,7 +86,7 @@ def dropbox_client(monkeypatch):
 
     monkeypatch.setattr(dropbox_utils, "Dropbox", mock_dropbox)
     mocked_dropbox_client = DropboxClient()
-    mocked_dropbox_client.folder = "test_folder"
+    mocked_dropbox_client.monefy_backup_files_folder = "test_folder"
     return mocked_dropbox_client
 
 
@@ -99,7 +99,7 @@ def dropbox_error_client(monkeypatch):
 
     monkeypatch.setattr(dropbox_utils, "Dropbox", mock_dropbox)
     mocked_dropbox_client = DropboxClient()
-    mocked_dropbox_client.folder = "test_folder"
+    mocked_dropbox_client.monefy_backup_files_folder = "test_folder"
     return mocked_dropbox_client
 
 

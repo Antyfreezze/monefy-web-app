@@ -1,3 +1,4 @@
+"""Module for create extra HTTP codes that are not included to Sanic standard list"""
 from sanic.exceptions import SanicException
 
 

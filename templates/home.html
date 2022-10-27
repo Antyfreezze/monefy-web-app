@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+    <h1>Home page</h1>
+
+{% if authenticated %}
+    {% if avatar is not none %}
+    <img src="{{ avatar }}" alt="{{ name }}'s avatar" />
+    {% endif %}
+    <p>{{ message }}</p>
+    <br>
+    <a href="{{ '/info' }}">Your Monefy Backup CSV file info</a>
+    <br>
+    <a href="{{ '/aggregation?format=csv' }}">Get CSV Monefy Backup file</a>
+    <br>
+    <a href="{{ '/aggregation?format=json' }}">Get JSON Monefy Backup file</a>
+    <br>
+    <a href="{{ '/aggregation?format=csv&summarized=true' }}">Get summarized CSV Monefy Backup file</a>
+    <br>
+    <a href="{{ '/aggregation?format=json&summarized=true' }}">Get summarized JSON Monefy Backup file</a>
+
+{% else %}
+    <p>{{ message }}</p>
+    <form action="" method="post">
+        <button>Dropbox auth</button>
+    </form>
+{% endif %}
+{% endblock %}

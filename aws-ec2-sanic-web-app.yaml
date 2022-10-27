@@ -15,59 +15,41 @@ Parameters:
     Description: Enter t2.micro, m1.small, or m1.large. Default is t2.micro.
   AppImageId:
     Type: String
-    Default: ami-0006ba1ba3732dd33
+    Default: ami-0a1ee2fb28fe05df3
   AppKeyName:
     Type: String
     Default: my-aws-key
   GitRepository:
     Type: String
     Default: https://github.com/parseltonguedev/monefy-web-app.git
-  DropboxToken:
+  GitBranch:
     Type: String
-    Default: token
-    Description: Provide Dropbox Token
-  DropboxPath:
-    Type: String
-    Default: /Apps/monefy/database/
-  DropboxAppSecret:
-    Type: String
-    Default: secret
-    Description: Provide Dropbox App Secret
-  AppPort:
-    Type: String
-    Default: 8888
-    Description: Port that will be used for Monefy Web App
-  AppAutoReload:
-    Type: String
-    Default: False
+    Default: dropbox_auth
     AllowedValues:
-      - False
-      - True
-    Description: Autoreload Sanic App after update
-  AppDebug:
-    Type: String
-    Default: False
-    AllowedValues:
-      - False
-      - True
-    Description: Debug mode for Sanic App
-  AppAccessLog:
-    Type: String
-    Default: False
-    AllowedValues:
-      - False
-      - True
-    Description: Logs access for Sanic App
+      - master
+      - dropbox_auth
   AppVpcId:
     Type: String
     Default: vpc-0118939e6a04e2843
 
 Resources:
+
+  MonefyInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: Sanic-EC2-Profile
+      Roles:
+        - sanic-ec2-role
+
   MonefyWebAppInstance:
     Type: AWS::EC2::Instance
+    DependsOn:
+      - MonefyInstanceProfile
+      - AppSecurityGroup
     Properties:
       ImageId: !Ref AppImageId
       InstanceType: !Ref AppEC2InstanceType
+      IamInstanceProfile: !Ref MonefyInstanceProfile
       KeyName: !Ref AppKeyName
       SecurityGroupIds:
         - Ref: AppSecurityGroup
@@ -81,17 +63,37 @@ Resources:
             #!/bin/bash
             su - ec2-user
             cd /home/ec2-user
-            sudo yum update -y
-            sudo yum install git -y
-            git clone ${GitRepository}
+            yum update -y
+            yum upgrade -y
+            yum groupinstall "Development Tools" -y
+            yum install openssl11 openssl11-devel libffi-devel bzip2-devel wget sqlite-devel git python3-pip epel-release nginx certbot python-certbot-nginx -y
+            wget https://www.python.org/ftp/python/3.10.4/Python-3.10.4.tgz
+            tar -xf Python-3.10.4.tgz
+            cd Python-3.10.4/
+            ./configure --enable-optimizations --enable-loadable-sqlite-extensions
+            make && make altinstall
+            cd /home/ec2-user
+            amazon-linux-extras enable epel
+            yum clean metadata
+            aws s3 cp s3://bohdan-dev-bucket/monefied.key /etc/nginx
+            aws s3 cp s3://bohdan-dev-bucket/monefied_xyz.crt /etc/nginx
+            aws s3 cp s3://bohdan-dev-bucket/nginx.conf /etc/nginx
+            aws s3 cp s3://bohdan-dev-bucket/monefied.service /etc/systemd/system/
+            su ec2-user -c "git clone ${GitRepository}"
             cd monefy-web-app/
-            python3 -m venv env
-            source env/bin/activate
-            pip install -r requirements.txt
-            export DROPBOX_TOKEN=${DropboxToken}
-            export DROPBOX_PATH=${DropboxPath}
-            export DROPBOX_APP_SECRET=${DropboxAppSecret}
-            python run.py --port=${AppPort} --auto-reload=${AppAutoReload} --debug=${AppDebug} --access_log=${AppAccessLog}
+            su ec2-user -c "git checkout ${GitBranch}"
+            su ec2-user -c "mkdir logs"
+            su ec2-user -c "python3.10 -m venv env"
+            su ec2-user -c "source env/bin/activate"
+            su ec2-user -c "pip install -r requirements.txt"
+            systemctl daemon-reload
+            systemctl start monefied
+            systemctl enable monefied
+            systemctl start nginx
+            systemctl enable nginx
+            certbot --nginx -d monefied.xyz --non-interactive --agree-tos -m jrzord2@gmail.com
+            nginx -s reload
+            systemctl restart nginx
 
   AppSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -108,8 +110,12 @@ Resources:
           ToPort: 80
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: 8888
-          ToPort: 8888
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
           CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
         - IpProtocol: -1
