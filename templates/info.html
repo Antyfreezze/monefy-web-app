@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Info{% endblock %}
+
+{% block content %}
+<h1>Your latest Monefy Backup file transactions</h1>
+
+<br>
+<a href="{{ '/' }}">Back to homepage</a>
+<br>
+<br>
+<br>
+
+<table>
+   <tr>
+       {% for key in monefy_data[0] %}
+       <th>{{ key }}</th>
+       {% endfor %}
+   </tr>
+
+   {% for data in monefy_data %}
+   <tr>
+       {% for key in data %}
+       <td>{{ data[key] }}</td>
+       {% endfor %}
+   </tr>
+   {% endfor %}
+</table>
+{% endblock %}

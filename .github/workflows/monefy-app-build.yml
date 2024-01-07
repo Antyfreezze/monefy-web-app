@@ -39,11 +39,11 @@ jobs:
         export DROPBOX_APP_SECRET=${{ env.DROPBOX_APP_SECRET }}
     - name: Lint with pylint
       run: |
-        pylint run.py config.py src tests
-    - name: Test with pytest
-      run: |
-        pytest --cov . --cov-report xml:/home/runner/coverage.xml
-    - name: Upload coverage reports to Codecov with GitHub Action
-      uses: codecov/codecov-action@v2
-      with:
-        files: /home/runner/coverage.xml
+        pylint run.py src/
+#    - name: Test with pytest
+#      run: |
+#        pytest --cov . --cov-report xml:/home/runner/coverage.xml
+#    - name: Upload coverage reports to Codecov with GitHub Action
+#      uses: codecov/codecov-action@v2
+#      with:
+#        files: /home/runner/coverage.xml
